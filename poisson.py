@@ -14,7 +14,7 @@ k = 5
 
 beta1s = []
 thetas = []
-for _ in range(1000):
+for mc_iter in range(1000):
     pos_points = [st.expon.rvs(scale = 1/(lambda_0 + tau))]
     while pos_points[-1] < delta:
         pos_points.append(pos_points[-1] + st.expon.rvs(scale = 1/(lambda_0+tau)))
@@ -29,16 +29,17 @@ for _ in range(1000):
     beta1 = np.linalg.lstsq(np.vstack([np.ones(k), epsilons[:k]]).T, thetahats[:k], rcond = None)[0]
     beta1s.append(beta1[1])
 
-    k = 500
-    thetahats = [theta/epsilon for (theta, epsilon) in zip(thetahats, epsilons)]
-    beta1 = np.linalg.lstsq(np.vstack([np.ones(k), epsilons[:k]]).T, thetahats[:k], rcond = None)[0]
-
-    epsilons = epsilons[0:]
-    thetahats = thetahats[0:]
-    plt.plot(epsilons, thetahats)
-    plt.plot(epsilons, [beta1[0] + beta1[1]*e for e in epsilons])
-    plt.show()
-    exit()
+    if mc_iter == 1:
+        k = int(delta/epsilon)
+        thetahats = [theta/epsilon for (theta, epsilon) in zip(thetahats, epsilons)]
+        beta1 = np.linalg.lstsq(np.vstack([np.ones(k), epsilons[:k]]).T, thetahats[:k], rcond = None)[0]
+        epsilons = epsilons
+        thetahats = thetahats
+        plt.plot(epsilons, thetahats)
+        plt.plot(epsilons, [beta1[0] + beta1[1]*e for e in epsilons])
+        plt.savefig("thetahat_plot.png")
+        plt.show()
+        exit()
 
 
 plt.hist(beta1s)
@@ -50,7 +51,7 @@ hat = np.linalg.inv(Xt @ Xt.T) @ Xt
 print(hat)
 theory = []
 for _ in range(1000):
-    b = 2/(k*(k-1)) * sum([(-3*(k+1)+6*(i+1))/((k+1)*epsilon) * (st.poisson.rvs((lambda_0+tau)*(i+1)*epsilon) - st.poisson.rvs(lambda_0*(i+1)*epsilon)) for i in range(k)])
+    b = sum([(12*i-6*k+6)/((k-1)*k*(k+1)*epsilon) * (st.poisson.rvs((lambda_0+tau)*(i+1)*epsilon) - st.poisson.rvs(lambda_0*(i+1)*epsilon)) for i in range(k)])
     theory.append(b)
 
 plt.hist(theory, alpha = 0.5)
