@@ -4,15 +4,16 @@ import matplotlib.pyplot as plt
 
 np.random.seed(0)
 
-delta = 10
-epsilon = 0.1
+delta = 20
+epsilon = 0.2
 
 lambda_0 = 5
 tau = 10
 
 def confounding(x):
+    return x
+    return -tau/2 - tau/2*np.tanh(x-5)
     return 0
-    return np.exp(x)
 
 deltas = []
 tau_estimates = []
@@ -37,12 +38,12 @@ for mc_iter in range(10):
     for k in range(2, int(delta/epsilon)):
         # Estimate the distribution of beta hat
         theory = []
-        pos_mean = len([x for x in pos_points if x < (k+1)*epsilon])/((k+1)*epsilon)
-        neg_mean = len([x for x in neg_points if x > -(k+1)*epsilon])/((k+1)*epsilon)
+        pos_mean = len([x for x in pos_points if x < k*epsilon])/(k*epsilon)
+        neg_mean = len([x for x in neg_points if x > -k*epsilon])/(k*epsilon)
         pval_iters = 100
         for _ in range(pval_iters):
-            #theory.append(sum([(12*i-6*k+6)/((k-1)*k*(k+1)*epsilon) * (st.poisson.rvs((pos_mean)*(i+1)*epsilon) - st.poisson.rvs(neg_mean*(i+1)*epsilon)) for i in range(k)]))
-            theory.append(sum([(12*i-6*k+6)/((k-1)*k*(k+1)*epsilon * (i+1)*epsilon) * (st.poisson.rvs((lambda_0+tau)*(i+1)*epsilon) - st.poisson.rvs(lambda_0*(i+1)*epsilon)) for i in range(k)]))
+            theory.append(sum([(12*i-6*k+6)/((k-1)*k*(k+1)*epsilon * (i+1)*epsilon) * (st.poisson.rvs(pos_mean*(i+1) * epsilon) - st.poisson.rvs(neg_mean*(i+1) * epsilon)) for i in range(k)]))
+            #theory.append(sum([(12*i-6*k+6)/((k-1)*k*(k+1)*epsilon * (i+1)*epsilon) * (st.poisson.rvs((lambda_0+tau)*(i+1)*epsilon) - st.poisson.rvs(lambda_0*(i+1)*epsilon)) for i in range(k)]))
 
         # Compute p-value for H_0: beta = 0
         beta1 = np.linalg.lstsq(np.vstack([np.ones(k), epsilons[:k]]).T, tauhats[:k], rcond = None)[0][1]
@@ -62,20 +63,15 @@ for mc_iter in range(10):
             break
         k += 1
 
-    print("    ", pvals[::10])
-    print("    ", epsilons[k-1])
-    print("    ", thetahats[k-1]/epsilons[k-1])
-    print("    ", thetahats[-1]/epsilons[-1])
     deltas.append(epsilons[k-1])
     tau_estimates.append(thetahats[k-1]/epsilons[k-1])
     bad_tau_estimates.append(thetahats[-1]/epsilons[-1])
 
-print()
 print("Final results")
 print("Avg. Delta:", np.mean(deltas))
 print()
-print("Proposal Mean tau:", np.mean(tau_estimates))
+print("Proposal tau Bias:", tau - np.mean(tau_estimates))
 print("Proposal tau MSE:", np.mean([(t - tau)**2 for t in tau_estimates]))
 print()
-print("Naive Mean tau", np.mean(bad_tau_estimates))
+print("Naive tau Bias:", tau - np.mean(bad_tau_estimates))
 print("Naive tau MSE", np.mean([(t - tau)**2 for t in bad_tau_estimates]))
