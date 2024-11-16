@@ -25,15 +25,15 @@ def tanh_confounder(x):
 
 # Generates sample data given a confounder
 def generate_data(confounder):
-        pos_points = [st.expon.rvs(scale = 1/(lambda_0 + tau))]
-        while pos_points[-1] < delta:
-            pos_points.append(pos_points[-1] + st.expon.rvs(scale = 1/(lambda_0 + tau + confounder(pos_points[-1]))))
+    pos_points = [st.expon.rvs(scale = 1/(lambda_0 + tau))]
+    while pos_points[-1] < delta:
+        pos_points.append(pos_points[-1] + st.expon.rvs(scale = 1/(lambda_0 + tau + confounder(pos_points[-1]))))
 
-        neg_points = [-1*st.expon.rvs(scale = 1/lambda_0)]
-        while neg_points[-1] > -1*delta:
-            neg_points.append(neg_points[-1] - st.expon.rvs(scale = 1/(lambda_0 + confounder(neg_points[-1]))))
+    neg_points = [-1*st.expon.rvs(scale = 1/lambda_0)]
+    while neg_points[-1] > -1*delta:
+        neg_points.append(neg_points[-1] - st.expon.rvs(scale = 1/(lambda_0 + confounder(neg_points[-1]))))
 
-        return pos_points, neg_points
+    return pos_points, neg_points
 
 
 # Plot tauhat as a function of delta, if you only use the endpoint
